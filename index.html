@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <link rel="stylesheet" href="slider/d3.slider.css"/>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.22.1/ramda.min.js"></script>
 <style>
 
     body {
@@ -8,9 +9,12 @@
     }
 
     .baramount {
-        fill: blue;
+        fill: #297acc;
     }
 
+    .baramounthighlight{
+        fill: #297acc;
+    }
     .axis path,
     .axis line {
         fill: none;
@@ -18,16 +22,20 @@
         shape-rendering: crispEdges;
     }
 
+    .axistick {
+        fill: #444;
+    }
+
     .x.axis path {
         display: none;
     }
 
-    .y.axis path {
-        display: none;
-    }
+    /*.y.axis path {*/
+        /*display: none;*/
+    /*}*/
 
     .x.axis line {
-        stroke: #000;
+        stroke: #ddd;
     }
 
     .y.axis {
@@ -36,140 +44,189 @@
     }
 
     #sliderbyyear {
-        width: 790px;
+        /*width: calc(100% );*/
+        height: 14px;
+        background-color: #d6eff6;
+        border-color: #add3de;
+        border-radius: 7px;
+        /*margin-bottom: 10px;*/
+        margin-left: 20px;
+        margin-right: 45px;
+        white-space: nowrap;
+        /*padding-bottom: 50px;*/
     }
 
+    #bottomsign {
+        font-size: 12px;
+        text-align: center;
+    }
 </style>
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script src="slider/d3.slider.js"></script>
 
 <body>
-<div style="width: 900px; text-align: center;">
-    <h2>Commiters lifetime pyramid at ASF in <span id="slidertext">1996 Q2</span></h2>
+<div style="text-align: center; white-space: nowrap;">
+    <h2>Committers lifetime pyramid at ASF in <span id="slidertext">2016 Q2</span></h2>
 </div>
-<div id="sliderbyyear" style="margin-left:20px; margin-right:20px"></div>
+<div id="sliderbyyear"></div>
 <script>
-    var haxis = 480; // Coordinate of X axis (null)
-    var margin = {top: 20, right: 20, bottom: 20, left: 20};
-    var padding = {top: 0, right: 0, bottom: 30, left: 0};
-    var width = 960 - margin.left - margin.right;
-    var height = 590 - margin.top - margin.bottom;
-    var barwidth = 9; //width of bars
-    var barscale = 0.39;
-    var barpadding = 1; //spacing between bars
+    var svg, margin, padding, width, barscale, height, barpadding, movechart, barsize;
 
-    var svg = d3.select("body").append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    function draw() {
+        margin = {top: 60, right: 0, bottom: 70, left: 20};
+        padding = {top: 20, right: 30, bottom: 70, left: 26};
+        width = window.innerWidth - margin.left - margin.right - padding.left - padding.right;
+        barscale = width / 1256; //1256 - maximum users;
+        barpadding = 1; //spacing between bars
 
-    var x = d3.scale.linear()
-            .domain([1, 20])
-            .range([34, width-106-20]);
+        height = window.innerHeight - margin.top - margin.bottom - padding.top - padding.bottom;
+        barsize = (height / 79) - barpadding;
 
-    var xAxis = d3.svg.axis()
-            .scale(x)
-            .ticks(20)
-            .tickSize(3);
+        svg = d3.select("body").append("svg")
+                .attr("width", (width + padding.left + padding.right))
+                .attr("height", (height + padding.top + padding.bottom))
+                .attr("class","svgchart")
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + 0 + ")");
 
-    var y = d3.scale.linear()
-            .domain([0, 1000])
-            .range([haxis-padding.bottom + 8 , 68]);
+        //y axis
+        for ( var i=1; i<=19; i++) {
+            d3.select(".svgchart")
+                    .append("text")
+                    .attr("x", padding.left + 14)
+                    .attr("y", height - (barsize + barpadding) * 4 * i + margin.top)
+                    .text(i)
+                    .style("font-size", 13)
+                    .style("text-anchor", "end");
 
-    var yAxis = d3.svg.axis()
-            .scale(y)
-            .ticks(5)
-            .tickSize(width-106)
-            .orient("right");
+            d3.select(".svgchart")
+                    .append("rect")
+                    .attr("height", 1)
+                    .attr("width", 4)
+                    .attr("transform", "translate(" + (padding.left+16) + "," + (height - (barsize+barpadding) * 4 * (i+0.15) + margin.top) + ")" )
+                    .attr("class", "axistick");
+        }
 
-    d3.select("svg")
-            .append("text")
-            .attr("x", 690)
-            .attr("y", 544)
-            .text("years as commiter");
+//        var y = d3.scale.linear()
+//                .domain([19.75, 0])
+//                .range([0, height]);
+//        var yAxis = d3.svg.axis()
+//                .scale(y)
+//                .ticks(22)
+//                .tickSize(5)
+//                .orient("left");
+//        svg.append("g")
+//                .attr("class", "y axis")
+//                .attr("transform", "translate(" + (padding.left - 1) + ", " + (-padding.top + 1.5) + ")")
+//                .call(yAxis);
 
-    d3.select("svg")
-            .append("text")
-            .attr("x", 838)
-            .attr("y", 126)
-            .style("font-size", 12)
-            .text("commiters");
+        var x = d3.scale.linear()
+                .domain([1256, 0])
+                .range([width, 0]);
+        var xAxis = d3.svg.axis()
+                .scale(x)
+                .ticks(7)
+                .tickSize(height + 7) // const - padding from chart
+                .orient("bottom");
+        svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(" + (padding.left - 0.5) + " ," + (-padding.top + margin.top + 12) + ")")
+                .call(xAxis)
+                .style("font-size", 13);
 
-    svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + (height - 66) + ")")
-            .call(xAxis);
-
-    svg.append("g")
-            .attr("class", "y axis")
-            .attr("transform", "translate(0," + 22 + ")")
-            .call(yAxis);
-
-    function displaypyramid(chosenyear, chosenquart) {
-
-        d3.csv("data/result-2.csv", function (d) { return {year: +d.y, q: +d.q, total: +d.total};
-        }, function (error, data) {
-            pyramiddata = data;
-
-            var bars = svg.selectAll("bar")
-                    .data(pyramiddata)
-                    .enter()
-                    .append("g")
-                    .filter(function (d) {
-                        return (d.year == chosenyear) && (d.q == chosenquart) //filtering data by slider's value
-                    })
-
-            svg.selectAll("rect").remove(); //rerendering
-
-            bars.append("rect")
-                    .attr("height", function (d) {
-                        return d.total * barscale;
-                    })
-                    .attr("width", function (d) {
-                        return (barwidth);
-                    })
-                    .attr("transform", function (d, i) {
-                        return "translate(" + i * (barwidth + barpadding) + "," + (haxis - d.total * barscale) + ")";
-                    })
-                    .attr("class", "baramount")
-                    .append("title").text(function (d) {
-                return "Total amount of live user : " + d.total
-            });
-
-
-            function type(d) {
-                d.frequency = +d.frequency;
-                return d;
-            }
-        })
-    } ;
-
-    displaypyramid(2016, 2);
-
-    svg.append("svg:image")
-            .attr('x',797)
-            .attr('y',20)
-            .attr('width', 68)
-            .attr('height', 68)
-            .attr("xlink:href","data/Lambert.png")
+        d3.select(".svgchart")
+                .append("text")
+                .attr("x", padding.left + 14 + 14)
+                .attr("y", height - (barsize + barpadding) * 4 * 19 + margin.top)
+                .text("years as committer")
+                .style("font-size", 13);
+        d3.select(".svgchart")
+                .append("text")
+                .attr("x", width - padding.right )
+                .attr("y", height + padding.top + padding.bottom - 6)
+                .style("font-size", 13)
+                .text("committers")
+                .style("text-anchor", "center");
+        d3.select(".svgchart")
+                .append("svg:image")
+                .attr('x',window.innerWidth - 114)
+                .attr('y',height - (barsize+barpadding)*2.5 )
+                .attr('width', 68)
+                .attr('height', 68)
+                .attr("xlink:href","data/Lambert.png")
+    }
 
     d3.select('#sliderbyyear').call(
             d3.slider()
                     .axis(true).min(1996.25).max(2016.25).step(0.25)
                     .value(2016.25)
                     .on("slide", function (evt, value) {
-                        var chosenyear = Math.floor(value);
-                        var chosenquart = (value - Math.floor(value)) * 4 + 1;
+                        chosenyear = Math.floor(value);
+                        chosenquart = (value - Math.floor(value)) * 4 + 1;
                         d3.select('#slidertext').text(chosenyear + " Q" + chosenquart);
-                        displaypyramid(chosenyear, chosenquart);
+                        displaypyramid();
                     }))
 
+    draw();
 
-    //        d3.timer(function() {
-    //            d3.select('#sliderbyyear').value = +0.25;
-    //        }
+    var pyramiddata;
+
+    d3.csv("data/result-2.csv", function (d) { return {year: +d.y, q: +d.q, total: +d.total};
+    }, function (error, data) {
+        pyramiddata = data;
+        displaypyramid(chosenyear, chosenquart); //for the first time
+    } );
+
+    function displaypyramid () {
+
+        function filtering(d) {
+            return (d.year == chosenyear) && (d.q == chosenquart) //filtering data by slider's value
+        }
+//        svg.selectAll("rect").remove(); //rerendering
+        svg.selectAll(".tmp").remove(); //rerendering
+
+            var bars = svg.selectAll("bar")
+                    .data(R.filter(filtering, pyramiddata))
+                    .enter()
+                    .append("g")
+                    .attr("class", "tmp");
+
+
+        var k = 0
+            bars.append("rect")
+                    .attr("height", function (d) { return (barsize); })
+                    .attr("width", function (d) { return (d.total * barscale); })
+                    .attr("transform", function (d, i) {
+                        return "translate(" + padding.left + "," + (height + margin.top - (i + 1.5) * (barsize + barpadding)) + ")"; //
+                    })
+                    .attr("class", function(d){
+                        k++
+                        if (((k - 1  + chosenquart) % 4) == 0) {
+//                            alert(k+' '+chosenquart)
+                            return "baramounthighlight"
+                        }
+                        return "baramount"
+                    })
+                    .append("title").text(function (d) { return "Amount of committers at this age in ASF : " + d.total });
+
+        function type(d) {
+                d.frequency = +d.frequency;
+                return d;
+            }
+
+    } ;
+
+    var chosenyear = 2016;
+    var chosenquart = 2;
+
+    function resize() {
+        window.location.reload();
+    }
+
+    window.onresize = resize;
 
 </script>
+
+<div id="bottomsign">Extracted, processed and visualized at <a href="http://www.datamonsters.co/">Data Monsters Lab</a></div>
 
 </body>

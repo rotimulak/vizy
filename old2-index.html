@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="slider/d3.slider.css"/>
+<style>
+
+    body {
+        font-family: helvetica, arial;
+    }
+
+    .baramount {
+        fill: blue;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #ddd;
+        shape-rendering: crispEdges;
+    }
+
+    .x.axis path {
+        display: none;
+    }
+
+    .y.axis path {
+        display: none;
+    }
+
+    .x.axis line {
+        stroke: #ddd;
+    }
+
+    .y.axis {
+        color: gray;
+        font-size: 12px;
+    }
+
+    #sliderbyyear {
+        width: calc(100%-40px);
+        height: 14px;
+        background-color: #b4f1f6;
+        border-color: white;
+        border-radius: 7px;
+        margin-bottom: 10px;
+        margin-left: 20px;
+        margin-right: 20px;
+        white-space: nowrap;
+        /*padding-bottom: 50px;*/
+    }
+
+    #handleone {
+        color: #2980b9;
+        width: 1000px;
+        background-color: #bf1f1f;
+    }
+
+    #spacer {
+        height: 20px;
+    }
+
+    svg {
+        width: 100%;
+        /*background: lightslategray;*/
+    }
+
+</style>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="slider/d3.slider.js"></script>
+
+<body>
+<div style="text-align: center; white-space: nowrap;">
+    <h2>Commiters lifetime pyramid at ASF in <span id="slidertext">2016 Q2</span></h2>
+</div>
+<div id="sliderbyyear"></div>
+<div id="spacer"></div>
+<script>
+    //    var haxis = 480; // Coordinate of X axis (null)
+    var margin = {top: 60, right: 0, bottom: 0, left: 20};
+    var padding = {top: 20, right: 30, bottom: 300, left: 26};
+
+    var width = 500;
+    var barscale = (width - padding.left - padding.right) / 1256; //1256 - maximum users;
+
+    var barpadding = 1; //spacing between bars
+    var barsize = 5; //height of bars
+    var height = 79 * (barsize + barpadding) + padding.top + padding.bottom;
+
+    var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var y = d3.scale.linear()
+            .domain([20.5, 0])
+            .range([0, height - (padding.bottom + padding.top)]);
+    alert(height);
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            //            .ticks(22)
+            .tickSize(5)
+            .orient("left");
+
+    svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + (padding.left-1) + ", " + (-padding.top) + ")")
+            .call(yAxis);
+
+
+
+    var x = d3.scale.linear()
+            .domain([1256, 0])
+            .range([width - padding.right - padding.left, 0]);
+
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .ticks(7)
+            .tickSize(height - padding.bottom) // const - height of label
+            .orient("bottom");
+
+    svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(" + padding.left +  " ," + (-padding.top-padding.bottom) + ")")
+            .call(xAxis);
+
+    //    d3.select("svg")
+    //            .append("text")
+    //            .attr("x", 56)
+    //            .attr("y", 46)
+    //            .text("years as commiter")
+    //            .style("font-size", 12);
+    //
+    //    d3.select("svg")
+    //            .append("text")
+    //            .attr("x", width - 200)
+    //            .attr("y", height - 100)
+    //            .style("font-size", 12)
+    //            .text("commiters");
+
+    function displaypyramid(chosenyear, chosenquart) {
+
+        d3.csv("data/result-2.csv", function (d) { return {year: +d.y, q: +d.q, total: +d.total};
+        }, function (error, data) {
+            pyramiddata = data;
+
+            var bars = svg.selectAll("bar")
+                    .data(pyramiddata)
+                    .enter()
+                    .append("g")
+                    .filter(function (d) {
+                        return (d.year == chosenyear) && (d.q == chosenquart) //filtering data by slider's value
+                    })
+
+            svg.selectAll("rect").remove(); //rerendering
+
+            bars.append("rect")
+                    .attr("height", function (d) {
+                        return (barsize);
+                    })
+                    .attr("width", function (d) {
+                        return (d.total * barscale);
+                    })
+                    .attr("transform", function (d, i) {
+                        return "translate(" + padding.left + "," + (height - padding.bottom * 2 - padding.top - i * (barsize + barpadding)) + ")";
+                    })
+                    .attr("class", "baramount")
+                    .append("title").text(function (d) {
+                return "Amount of commiters at this age in ASF : " + d.total
+            });
+
+
+            function type(d) {
+                d.frequency = +d.frequency;
+                return d;
+            }
+        })
+    } ;
+
+    displaypyramid(2016, 2);
+
+    //    svg.append("svg:image")
+    //            .attr('x',797)
+    //            .attr('y',20)
+    //            .attr('width', 68)
+    //            .attr('height', 68)
+    //            .attr("xlink:href","data/Lambert.png")
+
+    d3.select('#sliderbyyear').call(
+            d3.slider()
+                    .axis(true).min(1996.25).max(2016.25).step(0.25)
+                    .value(2016.25)
+                    .on("slide", function (evt, value) {
+                        var chosenyear = Math.floor(value);
+                        var chosenquart = (value - Math.floor(value)) * 4 + 1;
+                        d3.select('#slidertext').text(chosenyear + " Q" + chosenquart);
+                        displaypyramid(chosenyear, chosenquart);
+                    }))
+
+
+    //        d3.timer(function() {
+    //            d3.select('#sliderbyyear').value = +0.25;
+    //        }
+
+</script>
+
+</body>

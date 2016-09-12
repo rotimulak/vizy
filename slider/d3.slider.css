@@ -33,17 +33,17 @@
 
 .d3-slider-handle {
     position: absolute;
-    width: 1.2em;
-    height: 1.2em;
-    border: 1px solid #d3d3d3;
-    border-radius: 4px;
-    background: #eee;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #a5bcc2;
+    border-radius: 13px;
+    background: #add3de;
     background: linear-gradient(to bottom, #eee 0%, #ddd 100%);
     z-index: 3;
 }
 
 .d3-slider-handle:hover {
-    border: 1px solid #999999;
+    border: 1px solid #0d81a3;
 }
 
 .d3-slider-horizontal .d3-slider-handle {
@@ -53,7 +53,9 @@
 
 .d3-slider-axis {
     position: relative;
-    z-index: 1;    
+    z-index: 1;
+    height: 50px;
+    /*width: 100%; !*edited *!*/
 }
 
 .d3-slider-axis-bottom {
@@ -76,7 +78,7 @@
 }
 
 .d3-slider-axis text {
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .d3-slider-vertical .d3-slider-handle {
